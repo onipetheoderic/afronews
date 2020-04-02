@@ -3,8 +3,9 @@ import {createAppContainer} from 'react-navigation';
 import {createBottomTabNavigator} from 'react-navigation-tabs';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
-import {MeasureScreen, TreatmentScreen, ProfileScreen} from './screens';
+import {MeasureScreen, TreatmentScreen} from './screens';
 import AllFeedsScreen from './screens/AllFeedsScreen';
+import ProfileScreen from './screens/ProfileScreen';
 import AddButton from './components/AddButton';
 
 const TabNavigator = createBottomTabNavigator(
