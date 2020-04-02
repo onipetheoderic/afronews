@@ -1,11 +1,15 @@
 import React from 'react';
 import {createAppContainer} from 'react-navigation';
-import {createBottomTabNavigator} from 'react-navigation-tabs';
+import {createBottomTabNavigator,} from 'react-navigation-tabs';
+
+import { createStackNavigator } from 'react-navigation-stack';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 import {MeasureScreen, TreatmentScreen} from './screens';
 import AllFeedsScreen from './screens/AllFeedsScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import LoginScreen from './screens/LoginScreen';
+import SignUpScreen from './screens/SignUpScreen';
 import AddButton from './components/AddButton';
 
 const TabNavigator = createBottomTabNavigator(
@@ -53,4 +57,15 @@ const TabNavigator = createBottomTabNavigator(
   }
 )
 
-export default createAppContainer(TabNavigator);
+const AppNavigator = createStackNavigator(
+  {
+    
+    Home: TabNavigator,
+    SignUpScreen: SignUpScreen,
+    LoginScreen: LoginScreen,
+    
+  },{
+    headerMode: 'none'
+  }
+);
+export default createAppContainer(AppNavigator)

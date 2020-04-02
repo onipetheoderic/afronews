@@ -26,10 +26,12 @@ const styles = StyleSheet.create({
     flatListItem: {
         color: '#434e61',
         padding: 10,
+        fontFamily:'Montserrat-Regular',
         fontSize: 16
     },
     topItem: {
-        marginTop:10
+        marginTop:10,
+        fontFamily:'Montserrat-Regular'
     }
 })
 

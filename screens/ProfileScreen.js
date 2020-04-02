@@ -27,8 +27,8 @@ export default function ProfileScreen(){
                     </View>
                 </View>
                 <View style={styles.infoContainer}>
-                    <Text style={[styles.text, {fontWeight:"200", fontSize:36, }]}>Julie</Text>
-                    <Text style={[styles.text, {color:"#AEB5BC", fontSize:14, }]}>Photography</Text>
+                    <Text style={[styles.text, {fontWeight:"200", fontSize:36 }]}>Julie</Text>
+                    <Text style={[styles.text, {color:"#AEB5BC", fontSize:14, fontFamily:'Montserrat-Regular' }]}>Photography</Text>
                 </View>
 
                 <View style={styles.statsContainer}>
