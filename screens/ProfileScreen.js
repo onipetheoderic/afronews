@@ -1,15 +1,59 @@
-import React from 'react';
+import React,{Component} from 'react';
 import {StyleSheet, SafeAreaView, ScrollView, Image, Text, View, StatusBar} from 'react-native';
 import Screen from './Screen';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import AsyncStorage from '@react-native-community/async-storage'
+import { baseUrl, iconUrl, countryKey, sessionKey } from '../Helpers/Constant'
+import { TouchableOpacity } from 'react-native-gesture-handler';
+import { NavigationActions, StackActions } from 'react-navigation'
 
-export default function ProfileScreen(){
+export default class ProfileScreen extends Component {
+    constructor(props) {
+        super(props);
+        this.state={
+            isLoggedInTrue:false
+        }
+    }
+    componentDidMount() {
+        let store = async () => await AsyncStorage.getItem(sessionKey)
+        store().then((val) => {
+            console.log("this is the value",val)
+
+        })
+    }
+
+    clearAsyncStorage = () => {
+        let store = async () => await AsyncStorage.removeItem(sessionKey)
+        store().then(() => {
+            console.warn('Logout successfully')
+           
+            const resetAction = StackActions.reset({
+                index: 0,
+                actions: [
+                    NavigationActions.navigate({
+                        routeName: "Home"
+                    })
+                ]
+            });
+            this.props.navigation.dispatch(resetAction);
+        }).catch((err) => {
+            console.warn('Logout failed', err.message)
+        })
+    }
+
+
+    render(){
+        const { goBack } = this.props.navigation;
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.titleBar}>
-                    <FontAwesome5 name="angle-left" size={24} color="#52575d" />
-                    <FontAwesome5 name="ellipsis-v" size={24} color="#52575d" />
+                    <TouchableOpacity onPress={() => goBack()}>
+                        <FontAwesome5 name="angle-left" size={24} color="#52575d" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => this.clearAsyncStorage()}>
+                        <FontAwesome5 name="power-off" size={24} color="#52575d" />
+                    </TouchableOpacity>
                 </View>
                 <View style={{alignSelf:"center"}}>
                     <View style={styles.profileImage}>
@@ -107,7 +151,7 @@ export default function ProfileScreen(){
         </SafeAreaView>
     )
 }
-
+}
 const styles = StyleSheet.create({
     container: {
         flex:1,

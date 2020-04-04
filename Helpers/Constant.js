@@ -1,0 +1,6 @@
+export const baseUrl = 'https://ng.afronews.org/'
+export const iconUrl = 'http://penplusbytes.org/wp-content/uploads/2017/12/news.jpg'
+export const avatarPath = '../images/no-photo.png'
+export const appName = 'AfroNews'
+export const sessionKey = '@SessionObj'
+export const countryKey = '@CountryObj'

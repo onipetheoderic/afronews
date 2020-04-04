@@ -7,16 +7,18 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 import {MeasureScreen, TreatmentScreen} from './screens';
 import AllFeedsScreen from './screens/AllFeedsScreen';
+import CountrySelection from './screens/CountrySelection';
 import ProfileScreen from './screens/ProfileScreen';
 import LoginScreen from './screens/LoginScreen';
 import SignUpScreen from './screens/SignUpScreen';
 import AddButton from './components/AddButton';
-
+import SingleScreen from './screens/SingleScreen';
+import UserScreen from './screens/UserScreen';
 const TabNavigator = createBottomTabNavigator(
- 
+ //{ screen: ({ navigation }) => createAppContainer(<TabNavigator screenProps={{ rootNavigation: navigation }} />) },
   {
     AllFeeds: {
-      screen: AllFeedsScreen,
+      screen:AllFeedsScreen,
       navigationOptions: {
         tabBarIcon: () => <FontAwesome5 name={'th-list'} size={24} color="#07411D" />,
        
@@ -30,7 +32,7 @@ const TabNavigator = createBottomTabNavigator(
       }
     },
     Add: {
-      screen: () => null,
+      screen: AllFeedsScreen,
       navigationOptions: {
         tabBarIcon: <AddButton />
       }
@@ -43,7 +45,7 @@ const TabNavigator = createBottomTabNavigator(
       }
     },
     Profile: {
-      screen: ProfileScreen,
+      screen: UserScreen,
       navigationOptions: {
         tabBarIcon: () => <FontAwesome5 name={'user'} size={24} color="#07411D"  />,
         
@@ -59,11 +61,12 @@ const TabNavigator = createBottomTabNavigator(
 
 const AppNavigator = createStackNavigator(
   {
-    
+    CountrySelection:CountrySelection,
     Home: TabNavigator,
     SignUpScreen: SignUpScreen,
     LoginScreen: LoginScreen,
-    
+    SignUpScreen: SignUpScreen,
+    SingleScreen: SingleScreen
   },{
     headerMode: 'none'
   }
