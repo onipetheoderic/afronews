@@ -110,7 +110,7 @@ SetCountry = (countryCode, countryName, baseUrl, currency) => {
                 <Text style={{fontFamily:'Audiowide-Regular', fontSize:25}}>Nigeria</Text>
                 <Text style={[styles.flatListItem, {fontFamily:'Candara'}]}>Select Nigeria News</Text>
                 </View>
-                <Image source={{uri: "https://i1.wp.com/infoguidenigeria.com/wp-content/uploads/2017/05/Nigerian-flag.jpg?w=852&ssl=1"}}
+                <Image source={require("../assets/images/Nigerian-flag.jpg")}
                 style={{width:200, height:90, marginRight:10, resizeMode:'stretch'}}
                 >
                 </Image>

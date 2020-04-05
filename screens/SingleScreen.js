@@ -1,5 +1,5 @@
 import React,{Component} from 'react';
-import {StyleSheet, Dimensions, ActivityIndicator, TouchableOpacity, SafeAreaView, ScrollView, Image, Text, View, StatusBar} from 'react-native';
+import {ToastAndroid, StyleSheet, TextInput, Dimensions, ActivityIndicator, TouchableOpacity, SafeAreaView, ScrollView, Image, Text, View, StatusBar} from 'react-native';
 import Screen from './Screen';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { TouchableHighlight } from 'react-native-gesture-handler';
@@ -12,9 +12,10 @@ import { getSinglePost,
     getPostComments, 
     getSinglePostAuthed,
     doLikePost, 
+    doPostComment,    
     doUnlikePost } from '../Helpers/ApiService'
 import { baseUrl, iconUrl, countryKey, sessionKey } from '../Helpers/Constant'
-import Comments from '../components/Comments';
+
 
 
 export default class AllFeedsScreen extends Component {
@@ -23,14 +24,17 @@ export default class AllFeedsScreen extends Component {
         this.state = {
           id: null,
           title: null,
+          myComment: null,
           post: null,
           user: null,
           createdAt: null,
           likes: null,
           slug: null,
           isLiked: false,
+          isCommentLiked:false,
           commentsLiked: [],
-    
+          commentsData: null,
+          commentsCount: null,
           session: null,
           baseUrl: baseUrl,
           isLoading: true
@@ -74,11 +78,11 @@ export default class AllFeedsScreen extends Component {
       }
     
       fetchPost = () => {
-        const { baseUrl } = this.state
+        const { baseUrl,session } = this.state
         const { navigation } = this.props
         let id = navigation.getParam('id', null)
         let title = navigation.getParam('title', null)
-    
+        this.fetchPostComments(id, baseUrl, session)
         getSinglePost(baseUrl, id).then((data) => {
           let post = entities.decodeHTML(data.text)
           if (data.images.length > 0) {
@@ -142,22 +146,7 @@ export default class AllFeedsScreen extends Component {
         }).catch((e) => {
           console.warn(e.message)
         })
-      }
-    
-      // fetchPostComments = () => {
-      //   const { id, title, baseUrl } = this.state
-    
-      //   getPostComments(baseUrl, id).then((data) => {
-      //     this.setState({
-      //       commentsData: data.data,
-      //       // isLoading: false
-      //     })
-    
-      //   }).catch((e) => {
-      //     console.warn(e.message)
-      //   })
-      // }
-    
+      }    
       handleShare = () => {
         const { title, slug, baseUrl } = this.state
         message = `${title}\n\nRead more... ${baseUrl}${slug}\n\n${appName}`
@@ -204,10 +193,144 @@ export default class AllFeedsScreen extends Component {
         }
     
       }
+      
+
+      handleCommentsLike = () => {
+        const { id, baseUrl, isLiked, session, likes } = this.state
+        let formData = new FormData();
+        formData.append('postId', id);
     
+        if (session != null) {
+          if (isLiked) {
+    
+            doUnlikePost(baseUrl, formData, session.token).then((data) => {
+              if (data.success) {
+                this.setState({
+                  isLiked: false,
+                  likes: likes - 1
+                })
+              }
+            }).catch((e) => {
+              console.warn(e)
+            })
+    
+          } else {
+    
+            doLikePost(baseUrl, formData, session.token).then((data) => {
+              if (data.success) {
+                this.setState({
+                  isLiked: true,
+                  likes: likes + 1
+                })
+              }
+            }).catch((e) => {
+              console.warn(e)
+            })
+    
+          }
+        }
+
+      }
+      showToastWithGravity = (msg) => {
+        ToastAndroid.showWithGravity(
+          msg,
+          ToastAndroid.SHORT,
+          ToastAndroid.CENTER
+        );
+      };
+      commentOnPost = () => {
+        console.log("this is the user comment",this.state.myComment)
+      
+        const { id, baseUrl, myComment, session } = this.state
+
+        this.setState({
+            isBtnDisabled: true,
+            isPosting: true
+        })
+
+        if (myComment.trim().length < 1) {
+            this.setState({
+                isPosting: false
+            })
+            return
+        }
+
+        let formData = new FormData();
+        formData.append('postId', id);
+        formData.append('comment', myComment);
+
+        doPostComment(baseUrl, formData, session.token).then((data) => {
+            if (data) {
+                // console.warn(data)
+                if (data.success) {
+                  this.showToastWithGravity('Comment posted successfully')
+                
+                    this.setState({
+                        isPosting: false,
+                        myComment: ''
+                    }, () => {
+                        this.fetchPostComments(id, baseUrl, session)
+                    })
+                } else if (data.errors) {
+                    if (data.errors.comment) {
+                      this.showToastWithGravity(data.errors.comment)
+                    } else {
+                      this.showToastWithGravity('Your comment cannot be posted at the moment')
+                       
+                    }
+                    this.setState({
+                        isBtnDisabled: false,
+                        isPosting: false
+                    })
+                }
+                else {
+                  this.showToastWithGravity('Your comment cannot be posted at the moment')
+                      
+                    this.setState({
+                        isBtnDisabled: false,
+                        isPosting: false
+                    })
+                }
+            } else {
+              this.showToastWithGravity('Your comment cannot be posted at the moment')
+            }
+        }).catch((e) => {
+            console.warn(e.message)
+            this.setState({
+                isBtnDisabled: false,
+                isPosting: false
+            })
+        })
+      }
+      
+      fetchPostComments = (postId, baseUrl, session) => {
+        this.setState({
+            isLoading: true,
+            isBtnClicked: true
+        })
+        getPostComments(baseUrl, postId, 1).then((data) => {
+          console.log("XXXXXXXXXXXXXXXXXXX",data)
+          console.log("JJJJJJJJJJJJ", data.data)
+            this.setState({
+                commentsData: data.data,
+                commentsCount: data.total,
+                currentPage: data.current_page,
+                lastPage: data.last_page,
+                isLoading: false,
+                // baseUrl: baseUrl,
+                postId: postId,
+                // commentsLiked: commentsLiked,
+                session: session
+            })
+        }).catch((e) => {
+            console.warn(e.message)
+        })
+    }
+
+
     render(){
 const { goBack } = this.props.navigation;
-const {isLoading, createdAt, user, title, likes, id, post, baseUrl, isLiked, commentsLiked, session} = this.state
+const {commentsData, commentsCount, isLoading, isCommentLiked, createdAt, user, title, likes, id, post, baseUrl, isLiked, commentsLiked, session} = this.state
 if (isLoading) {
   return (
     <View style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -216,6 +339,10 @@ if (isLoading) {
   )
 }    
 let likeImg = (isLiked) ? <FontAwesome5 name="heart" size={17} color="red" /> : <FontAwesome5 name="heart" size={17} color="#52575d" />
+// isCommentLiked
+let likeComment = (isCommentLiked) ? <FontAwesome5 name="thumbs-up" size={14} color="red" /> : <FontAwesome5 name="thumbs-up" size={14} color="#52575d" />
+let isCommentData = commentsData == null?false:true
+let sessionPresent = session !=null?true:false
 return (
         <SafeAreaView style={styles.container}>
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -234,7 +361,8 @@ return (
                     <TouchableOpacity onPress={() => this.handleLike()}>
                       {likeImg}
                     </TouchableOpacity>
-                    <Text style={{ marginLeft: 3 }}>{likes}</Text>
+                    <Text style={{ marginLeft: 3, marginRight:10 }}>{likes}</Text>
+                    <Text> <FontAwesome5 name="rocketchat" size={17} color="#52575d"/> {commentsCount}</Text>
                   </View>
                 </View>
               <View style={{marginLeft:15}}>
@@ -247,36 +375,52 @@ return (
               </View>
               
             <Text style={[styles.subText, styles.recent]}>User Comments</Text>
-            <Comments postId={id} baseUrl={baseUrl} commentsLiked={commentsLiked} session={session} />
+           
 
             <View style={{alignItems:'center'}}>
-                <View style={styles.recentItem}>
-                    <View style={styles.recentItemIndicator}></View>
-                    <View style={{width:250}}>
-                        <Text style={[styles.text, {color:"#41444b", fontWeight:"300"}]}>
-                            Started Following 
-                        <Text style={{fontWeight:'400'}}>Theoderic Onipe and 
-                        <Text style={{fontWeight:'400'}}>DesignIntoCode</Text></Text></Text>
-                    </View>
-                </View>
-                <View style={styles.recentItem}>
-                    <View style={styles.recentItemIndicator}></View>
-                    <View style={{width:250}}>
-                        <Text style={[styles.text, {color:"#41444b", fontWeight:"300"}]}>
-                            Started Following 
-                        <Text style={{fontWeight:'400'}}>Theoderic Onipe and 
-                        <Text style={{fontWeight:'400'}}>DesignIntoCode</Text></Text></Text>
-                    </View>
-                </View>
-                <View style={styles.recentItem}>
-                    <View style={styles.recentItemIndicator}></View>
-                    <View style={{width:250}}>
-                        <Text style={[styles.text, {color:"#41444b", fontWeight:"300"}]}>
-                            Started Following 
-                        <Text style={{fontWeight:'400'}}>Theoderic Onipe and 
-                        <Text style={{fontWeight:'400'}}>DesignIntoCode</Text></Text></Text>
-                    </View>
-                </View>
+            {sessionPresent &&
+            <View style={{flex:1, flexDirection: 'row',}}>
+              <TextInput 
+                placeholder="Enter your Comment here" 
+                style={{borderWidth:1, width:'60%'}}
+                onChangeText={(text) => this.setState({ myComment: text })}
+              />
+              <TouchableOpacity style={{backgroundColor:"green", width:'20%'}} onPress={()=>this.commentOnPost()}>
+              <FontAwesome5 style={{margin:20}} name="angle-double-right" size={27} color="white"/>
+              </TouchableOpacity>
+            </View>
+            }
+            {!sessionPresent &&
+            <View>
+              <TouchableOpacity onPress={()=>this.props.navigation.navigate('LoginScreen')}><Text>Not Logged In? Login to Comment</Text></TouchableOpacity>
+            </View>
+            }
+            {isCommentData &&
+            <View>
+              {commentsData.map((comment, index) => {
+                  let imgPath = (comment.user.profile.avatar.length < 1) ? iconUrl : `${this.state.baseUrl}${comment.user.profile.avatar}`
+                return  (
+                  <View style={{flex:1, flexDirection: 'row',
+                  backgroundColor:this.props.index % 2 == 0 ? '#EBEDEC': 'white'}}>
+                      <Image source={{uri: imgPath}}
+                      style={{width:60, height:60, margin:5, resizeMode:'stretch'}}
+                      >
+                      </Image>
+                      <View style={{flexDirection:'column', width:'70%',marginLeft:20, marginTop:10}}>
+                      <Text style={[styles.flatListItem]}>{comment.comment}</Text>
+                      <TouchableOpacity onPress={() => this.handleLike(comment.id,)} >
+                      {likeComment}
+                    </TouchableOpacity>
+                      </View>
+                  </View>
+                 )})}
+              </View>
+              }
+              
+             
+                
+               
+               
 
             </View>
             </ScrollView>
@@ -299,11 +443,16 @@ const styles = StyleSheet.create({
         width: undefined,
         height: undefined,
     },
+    flatListItem: {
+      color: '#434e61',
+      fontFamily:'Montserrat-Regular',
+      fontSize: 13
+  },
     subText: {
-        fontSize: 12,
-        color: '#AEB5BC',
+        fontSize: 14,
+        color: '#434e61',
         textTransform: 'uppercase',
-        fontWeight: '500'
+        fontWeight: '700'
     },  
     titleBar: {
         flexDirection: 'row',

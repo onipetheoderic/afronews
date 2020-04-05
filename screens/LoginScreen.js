@@ -67,7 +67,7 @@ export default class App extends React.Component{
             let formData = new FormData();
             formData.append('username', username);
             formData.append('password', password);
-
+        
             this.setState({
                 isLoggingIn: true
             }, () => {
@@ -159,9 +159,13 @@ export default class App extends React.Component{
                 <View style={styles.header}>
                 <ImageBackground source={require("../assets/images/Untitled-1.png")}
                 style={styles.imageBackground}>
-                     <Image source={{uri: "https://ng.afronews.org/images/afronews-logo.png"}} />
+                    
+                    <Image source={{uri: "https://ng.afronews.org/images/afronews-logo.png"}}
+                style={{width:220, height:90, margin:5, resizeMode:'stretch'}}
+                >
+                </Image>
                     <Text style={{fontFamily:'Audiowide-Regular',color:'white', fontSize:30}}>Welcome Back</Text>
-                    <Text style={{fontFamily:'Audiowide-Regular', color:'yellow'}}>Sign In To Continue</Text>
+                    <Text style={{fontFamily:'Audiowide-Regular', color:'yellow'}}>Sign Up To Continue</Text>
                 </ImageBackground>
                 </View>
                 <View style={styles.footer}>
@@ -206,7 +210,9 @@ export default class App extends React.Component{
                     </TouchableOpacity>
                     <View style={styles.signUp}>
                         <Text style={{fontFamily:'Audiowide-Regular', color:'black'}}>New User? </Text>
+                        <TouchableOpacity onPress={()=>this.props.navigation.navigate("SignUpScreen")}>
                         <Text style={{fontFamily:'Audiowide-Regular', color:"#07411D"}}>Sign Up</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </View>

@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, Dimensions, StyleSheet, StatusBar, ImageBackground, Animated} from 'react-native';
+import {View,ScrollView, Image,Text, TouchableOpacity, Dimensions, StyleSheet, StatusBar, ImageBackground, Animated} from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import { TypingAnimation } from 'react-native-typing-animation';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -67,11 +67,15 @@ export default class App extends React.Component{
                 <View style={styles.header}>
                 <ImageBackground source={require("../assets/images/Untitled-1.png")}
                 style={styles.imageBackground}>
-                    <Text style={{fontFamily:'Audiowide-Regular',color:'white', fontSize:30}}>Welcome Back</Text>
-                    <Text style={{fontFamily:'Audiowide-Regular', color:'yellow'}}>Sign In To Continue</Text>
+                    <Image source={{uri: "https://ng.afronews.org/images/afronews-logo.png"}}
+                style={{width:220, height:90, margin:5, resizeMode:'stretch'}}
+                >
+                </Image>
+                    <Text style={{fontFamily:'Audiowide-Regular',color:'white', fontSize:20}}>Welcome to Afronews</Text>
+                    <Text style={{fontFamily:'Audiowide-Regular', color:'yellow'}}>Quickly Sign up</Text>
                 </ImageBackground>
                 </View>
-                <View style={styles.footer}>
+                <ScrollView style={styles.footer}>
                     <Text style={[styles.title, {marginTop:20, fontFamily:'Audiowide-Regular',}]}>Email</Text>
                     <View style={styles.action}>
                         <TextInput 
@@ -83,7 +87,18 @@ export default class App extends React.Component{
                         this._typing() : null
                     }
                     </View>
-
+                    <Text style={[styles.title, {marginTop:20, fontFamily:'Audiowide-Regular',}]}>Username</Text>
+                    <View style={styles.action}>
+                        <TextInput 
+                        placeholder="Your Username" 
+                        style={styles.textInput}
+                        onFocus = {()=>this._foucus("email")}
+                        onChangeText={(text) => this.setState({ username: text })}
+                        />
+                        {this.state.typing_email ?
+                        this._typing() : null
+                    }
+                    </View>
                     <Text style={[styles.title, {marginTop:20, fontFamily:'Audiowide-Regular',}]}>Password</Text>
                     <View style={styles.action}>
                         <TextInput 
@@ -100,7 +115,7 @@ export default class App extends React.Component{
                         <View style={styles.button_container}>
                             <Animated.View style={[styles.animation,{width}]}>
                                 { this.state.enable ?
-                                <Text style={styles.textLogin}>Login</Text>
+                                <Text style={styles.textLogin}>Sign Up</Text>
                                 :
                                 <Animatable.View animation="bounceIn" delay={50}>
                                     <FontAwesome5 name="check" size={20} color="white" />
@@ -113,7 +128,7 @@ export default class App extends React.Component{
                         <Text style={{fontFamily:'Audiowide-Regular', color:'black'}}>New User? </Text>
                         <Text style={{fontFamily:'Audiowide-Regular', color:"#07411D"}}>Sign Up</Text>
                     </View>
-                </View>
+                </ScrollView>
             </View>
         )
         
@@ -129,10 +144,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     header: {
-        flex: 2
+        flex: 1
     },
     footer: {
-        flex: 3,
+        flex: 4,
         
         padding: 20
     },

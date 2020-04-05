@@ -3,7 +3,7 @@ import { ActivityIndicator, TouchableOpacity, RefreshControl, FlatList, Image, V
 import Screen from './Screen';
 import HorizontalFlatList from './HorizontalFlatList';
 import {AllFeedsData} from './AllFeedsData';
-import { getFeeds } from '../Helpers/ApiService'
+import { getFeeds, getCategories } from '../Helpers/ApiService'
 import axios from 'axios';
 import AsyncStorage from '@react-native-community/async-storage'
 import { baseUrl, iconUrl, countryKey } from '../Helpers/Constant'
@@ -20,7 +20,8 @@ export default class AllFeedsScreen extends Component {
             session: null,      
             newsList: [],
             currentPage: null,
-            lastPage: null
+            lastPage: null,
+            allCategory:[]
         };
       }
      
@@ -29,10 +30,12 @@ export default class AllFeedsScreen extends Component {
         store().then((val) => {
           if (val) {
             let _data = JSON.parse(val)
-             
+             console.log("val", val)
             getFeeds(_data.baseUrl, 1).then((data) => {
+              console.log("this are all the datas",data)
               let news = data.data
               console.log(news)
+              this.fetchCategory(_data.baseUrl)
               this.setState({
                 baseUrl: _data.baseUrl,
                 newsList: news,
@@ -50,7 +53,20 @@ export default class AllFeedsScreen extends Component {
         })
     }
     
-
+    fetchCategory(baseUrl){
+      console.log("geeting cateories")
+      getCategories(baseUrl).then((data) => {
+          console.log("categorys", data)
+          if (data.length>=1) {
+              console.log("its a success")
+            this.setState({
+              allCategory:data
+            })
+          }
+        }).catch((e) => {
+          console.warn(e)
+        })
+  }
 
       componentDidMount() {
         this.fetchFeeds()
@@ -97,7 +113,7 @@ export default class AllFeedsScreen extends Component {
         
         return (
             <View>
-                <HorizontalFlatList />
+                <HorizontalFlatList allCategories={this.state.allCategory} />
                 <FlatList
           data={this.state.newsList}
           keyExtractor={(item, index) => 'key' + index}

@@ -10,6 +10,7 @@ import AllFeedsScreen from './screens/AllFeedsScreen';
 import CountrySelection from './screens/CountrySelection';
 import ProfileScreen from './screens/ProfileScreen';
 import LoginScreen from './screens/LoginScreen';
+import CreatePost from './screens/CreatePost';
 import SignUpScreen from './screens/SignUpScreen';
 import AddButton from './components/AddButton';
 import SingleScreen from './screens/SingleScreen';
@@ -32,7 +33,7 @@ const TabNavigator = createBottomTabNavigator(
       }
     },
     Add: {
-      screen: AllFeedsScreen,
+      screen: CreatePost,
       navigationOptions: {
         tabBarIcon: <AddButton />
       }

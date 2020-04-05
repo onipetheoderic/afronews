@@ -5,7 +5,13 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {AllFeedsData} from './AllFeedsData';
 
 
-HorizontalFlatListItem = (props) => (
+HorizontalFlatListItem = (props) => {
+
+    console.log("hhhhh",props.item.icon_name)
+    let iconName = props.item.icon_name === undefined? "user" :props.item.icon_name
+    return(
+
+    
     <View style={{
         flex:1,
         flexDirection: 'column',
@@ -17,7 +23,7 @@ HorizontalFlatListItem = (props) => (
         margin: 10,
     }}>
         <View style={{marginTop:20, marginBottom:5}}>
-         <FontAwesome5 name={props.item.icon} size={34} color="#07411D" />
+         <FontAwesome5 name={iconName} size={34} color="#07411D" />
          </View>
         <Text style={{fontSize:11, color:'#07411D', margin:5, fontWeight:'bold', textAlign:'center'}}>
         {props.item.name}
@@ -25,6 +31,7 @@ HorizontalFlatListItem = (props) => (
 
     </View>
 )
+}
 
 export default HorizontalFlatListScreen = (props) => ( 
     
@@ -37,10 +44,10 @@ export default HorizontalFlatListScreen = (props) => (
                     <FlatList 
                     
                     horizontal={true}//means it can be scrolled horizontally
-                    data={AllFeedsData}
+                    data={props.allCategories}
                     renderItem = {({ item, index }) => {
                         return (
-                            <HorizontalFlatListItem item={item} index={index} parentFlatList={AllFeedsData}>
+                            <HorizontalFlatListItem item={item} index={index} parentFlatList={props.allCategories}>
 
                             </HorizontalFlatListItem>
                         )
