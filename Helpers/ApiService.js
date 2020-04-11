@@ -325,35 +325,46 @@ export async function createFilePost(baseUrl, token, payload){
     console.log("tis is the errr", err);
     })
 }
+/*
 
-export async function createPost(baseUrl, token, payload) {
-    // console.warn(baseUrl)
-    // console.warn(token)
-    
-    console.log("sessionssss", token)
-    console.log("bbaseurlll", baseUrl)
-    console.warn("this is the payload",payload)
-    
-    let link = `${baseUrl}api/writePost`
-    console.log("full link", link)
-    try {
-        let feeds = await fetch(link, {
+ try {
+        let feeds = await fetch(`${baseUrl}api/editPost/${postId}`, {
             body: payload,
             method: 'post',
             headers: {
                 Authorization: `Bearer ${token}`,
-                'Accept': 'application/json',
-                'Content-Type' : 'multipart/form-data',
+                Accept: 'application/json',
             }
         });
         let result = await feeds.json();
+
         feeds = null;
         return result;
     } catch (e) {
-        console.log("full error",e)
-        console.warn('--msg ' + e.message)
+        console.warn('--' + e.message)
     }
+*/ 
+export async function createPost(baseUrl, token, payload) {
+    try{
+        let feeds = await RNFetchBlob.fetch('POST', `${baseUrl}api/writePost`, {
+          
+            Authorization : `Bearer ${token}`,
+            'Content-Type' : 'application/json',
+            'Accept': 'application/json'
+    
+        }, payload)
+        let result = await feeds.json();
+
+        feeds = null;
+        return result;
+    }
+    catch (e) {
+        console.warn('--' + e.message)
+    }
+  
 }
+
+
 
 export async function updatePost(baseUrl, token, payload, postId) {
     // console.warn(baseUrl)

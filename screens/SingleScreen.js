@@ -391,7 +391,7 @@ return (
             </View>
             }
             {!sessionPresent &&
-            <View>
+            <View style={{marginVertical:20}}>
               <TouchableOpacity onPress={()=>this.props.navigation.navigate('LoginScreen')}><Text>Not Logged In? Login to Comment</Text></TouchableOpacity>
             </View>
             }
@@ -400,7 +400,7 @@ return (
               {commentsData.map((comment, index) => {
                   let imgPath = (comment.user.profile.avatar.length < 1) ? iconUrl : `${this.state.baseUrl}${comment.user.profile.avatar}`
                 return  (
-                  <View style={{flex:1, flexDirection: 'row',
+                  <View style={{flexDirection: 'row',
                   backgroundColor:this.props.index % 2 == 0 ? '#EBEDEC': 'white'}}>
                       <Image source={{uri: imgPath}}
                       style={{width:60, height:60, margin:5, resizeMode:'stretch'}}

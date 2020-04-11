@@ -6,22 +6,65 @@ import AsyncStorage from '@react-native-community/async-storage'
 import { baseUrl, iconUrl, countryKey, sessionKey } from '../Helpers/Constant'
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { NavigationActions, StackActions } from 'react-navigation'
-
+import { fetchUserReferrals, fetchUserEarnings, fetchUserPosts, deleteUserPost, fetchUserProfile } from '../Helpers/ApiService'
 export default class ProfileScreen extends Component {
     constructor(props) {
         super(props);
         this.state={
-            isLoggedInTrue:false
+            isLoggedInTrue:false,
+            isLoading: true,
+            referralList: [],
+            isRefreshing: false,
+            earningList:null,
+            userData: null,
+            postList: [],
         }
     }
     componentDidMount() {
-        let store = async () => await AsyncStorage.getItem(sessionKey)
-        store().then((val) => {
-            console.log("this is the value",val)
-
-        })
+   
+            this.initReferrals();
+            this.initEarnings();
+           
+        
     }
+    
+    initEarnings = () => {
+        let session = async () => await AsyncStorage.getItem(sessionKey)
+        session().then((val) => {
+          if (val) {
+            let sess = JSON.parse(val)
+            console.log("detailsssss", sess)
+            fetchUserEarnings(this.props.baseUrl, sess.token).then((data) => {
+                console.log("EEEEEEEE",data)
+              this.setState({
+                isLoading: false,
+                earningList: data,
+                userData:sess
+              })
+              fetchUserPosts(this.props.baseUrl, 1, sess.token).then((data) => {
+                console.log("PPPPPPPPPPP",data.data)
+                let posts = data.data
+                this.setState({
+                    postList: posts,
+                    currentPage: data.current_page,
+                    lastPage: data.last_page,
+                    isLoading: false
+                })
+                
+            }).catch((e) => {
+                console.warn(e.message)
+            })
 
+            }).catch((e) => {
+              console.log(e.message)
+            })
+          } else {
+            this.clearAsyncStorage()
+          }
+        }).catch((e) => {
+          console.warn(e.message)
+        })
+      }
     clearAsyncStorage = () => {
         let store = async () => await AsyncStorage.removeItem(sessionKey)
         store().then(() => {
@@ -41,10 +84,39 @@ export default class ProfileScreen extends Component {
         })
     }
 
+    initReferrals = () => {
+        let session = async () => await AsyncStorage.getItem(sessionKey)
+        session().then((val) => {
+          if (val) {
+            let sess = JSON.parse(val)
+            fetchUserReferrals(this.props.baseUrl, sess.token).then((data) => {
+                console.log("RRRRRRRRRR", data)
+              this.setState({
+                isLoading: false,
+                referralList: data
+              })
+            }).catch((e) => {
+              console.log(e.message)
+            })
+          } else {
+            this.clearAsyncStorage()
+          }
+        }).catch((e) => {
+          console.warn(e.message)
+        })
+      }
+
 
     render(){
         const { goBack } = this.props.navigation;
-    return (
+        const earning = this.state.earningList===null ? 0 : this.state.earningList.total_earned
+        const paidout = this.state.earningList===null ? 0 : this.state.earningList.paid_out;
+        const current_balance = this.state.earningList===null ? 0 : this.state.earningList.cur_bal;
+        console.log("this is the userData", this.state.userData)
+        const first_name = this.state.userData === null? "" : this.state.userData.firstName;
+        const last_name = this.state.userData === null? "" : this.state.userData.lastName;
+        const avatar = this.state.userData === null? "" : `${this.props.baseUrl}/${this.state.userData.avatar}`;
+        return (
         <SafeAreaView style={styles.container}>
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.titleBar}>
@@ -57,13 +129,10 @@ export default class ProfileScreen extends Component {
                 </View>
                 <View style={{alignSelf:"center"}}>
                     <View style={styles.profileImage}>
-                        <Image source={{uri: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/User_icon_2.svg/220px-User_icon_2.svg.png"}} style={styles.image} resizeMode="center"></Image>
+                        <Image source={{uri: avatar}} style={styles.image} resizeMode="center"></Image>
                     </View>
 
-                    {/* <View style={styles.dm}>
-                     <FontAwesome5 name="stack-exchange" size={24} color="#52575d" />
-                    </View> */}
-
+                   
                     <View style={styles.active}></View>
 
                     <View style={styles.add}>
@@ -71,81 +140,61 @@ export default class ProfileScreen extends Component {
                     </View>
                 </View>
                 <View style={styles.infoContainer}>
-                    <Text style={[styles.text, {fontWeight:"200", fontSize:36 }]}>Julie</Text>
-                    <Text style={[styles.text, {color:"#AEB5BC", fontSize:14, fontFamily:'Montserrat-Regular' }]}>Photography</Text>
+                    <Text style={[styles.text, {fontWeight:"200", fontSize:36 }]}>{first_name}</Text>
+                    <Text style={[styles.text, {color:"#AEB5BC", fontSize:14, fontFamily:'Montserrat-Regular' }]}>{last_name}</Text>
                 </View>
 
                 <View style={styles.statsContainer}>
                     <View style={styles.statsBox}>
-                        <Text style={[styles.text, {fontSize:24}]}>420</Text>
-                        <Text style={[styles.text, styles.subText]}>Posts</Text>
+                        <Text style={[styles.text, {fontSize:24}]}>{this.state.referralList.length}</Text>
+                        <Text style={[styles.text, styles.subText]}>Referals</Text>
                     </View>
                     <View style={[styles.statsBox, { borderColor:'#DFD8C8', borderLeftWidth: 1, borderRightWidth:1}]}>
-                        <Text style={[styles.text, {fontSize:24}]}>420</Text>
-                        <Text style={[styles.text, styles.subText]}>Posts</Text>
+                <Text style={[styles.text, {fontSize:24}]}>{earning}</Text>
+                        <Text style={[styles.text, styles.subText]}>Total Earned</Text>
+                    </View>
+                    <View style={[styles.statsBox, { borderColor:'#DFD8C8', borderLeftWidth: 1, borderRightWidth:1}]}>
+                        <Text style={[styles.text, {fontSize:24}]}>{current_balance}</Text>
+                        <Text style={[styles.text, styles.subText]}>Balance</Text>
                     </View>
                     <View style={styles.statsBox}>
-                        <Text style={[styles.text, {fontSize:24}]}>420</Text>
-                        <Text style={[styles.text, styles.subText]}>Posts</Text>
+                        <Text style={[styles.text, {fontSize:24}]}>{paidout}</Text>
+                        <Text style={[styles.text, styles.subText]}>Paid Out</Text>
                     </View>
+                  
                 </View>
                 <View style={{marginTop:32}}>
                     <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
+                    {this.state.postList.map((post, index) => {
+            let imgPath = (post.images.length < 1) ? iconUrl : `${this.props.baseUrl}${post.images[0].path}`
+                        return(
                         <View style={styles.mediaImageContainer}>
-                            <Image source={{uri: "https://i.pinimg.com/236x/78/9e/51/789e510b82cd4d2ddb56bc3d2510fc83.jpg"}} style={styles.image} resizeMode="cover"></Image>
-                        
+                            <Image source={{uri:imgPath}} style={styles.image} resizeMode="cover"></Image>
+                        <Text>{post.topic}</Text>
                         </View>
-                        <View style={styles.mediaImageContainer}>
-                            <Image source={{uri: "https://i.pinimg.com/236x/80/5e/cb/805ecb3e5fe79db5812574c44a929ce0.jpg"}} style={styles.image} resizeMode="cover"></Image>
-                        
-                        </View>
-                        <View style={styles.mediaImageContainer}>
-                            <Image source={{uri: "https://i.pinimg.com/236x/58/dd/99/58dd99e84d2f3f2d19911a27ed05fed9--reading-fc-poster-design.jpg"}} style={styles.image} resizeMode="cover"></Image>    
-                        </View>
+                         )})}
+                       
                     </ScrollView>
-                    <View style={styles.mediaCount}>
-                        <Text style={[styles.text, {fontSize:20,color:"#DFD8C8",fontWeight:"300"}]}>70</Text>
-                        <Text style={[styles.text, {fontSize:20,color:"#DFD8C8",textTransform:"uppercase"}]}>Media</Text>
-                    </View>
-                    <View style={styles.mediaCount2}>
-                        <Text style={[styles.text, {fontSize:20,color:"#DFD8C8",fontWeight:"300"}]}>70</Text>
-                        <Text style={[styles.text, {fontSize:20,color:"#DFD8C8",textTransform:"uppercase"}]}>Media</Text>
-                    </View>
-                    <View style={styles.mediaCount3}>
-                        <Text style={[styles.text, {fontSize:20,color:"#DFD8C8",fontWeight:"300"}]}>70</Text>
-                        <Text style={[styles.text, {fontSize:20,color:"#DFD8C8",textTransform:"uppercase"}]}>Media</Text>
-                    </View>
+                   
                 </View>
-            <Text style={[styles.subText, styles.recent]}>Recent Activity</Text>
+            <Text style={[styles.subText, styles.recent]}>Recent Posts</Text>
             <View style={{alignItems:'center'}}>
-                <View style={styles.recentItem}>
+            {this.state.postList.map((post, index) => {
+                return(
+                    <View style={styles.recentItem}>
                     <View style={styles.recentItemIndicator}></View>
                     <View style={{width:250}}>
                         <Text style={[styles.text, {color:"#41444b", fontWeight:"300"}]}>
-                            Started Following 
-                        <Text style={{fontWeight:'400'}}>Theoderic Onipe and 
-                        <Text style={{fontWeight:'400'}}>DesignIntoCode</Text></Text></Text>
+                            {post.topic}                            
+                       </Text>
+                       <Text> <FontAwesome5 name="thumbs-up" size={14} color="blue" />
+                       <Text style={{marginLeft:5}}> {post.comments_count}</Text>
+                       </Text> 
                     </View>
                 </View>
-                <View style={styles.recentItem}>
-                    <View style={styles.recentItemIndicator}></View>
-                    <View style={{width:250}}>
-                        <Text style={[styles.text, {color:"#41444b", fontWeight:"300"}]}>
-                            Started Following 
-                        <Text style={{fontWeight:'400'}}>Theoderic Onipe and 
-                        <Text style={{fontWeight:'400'}}>DesignIntoCode</Text></Text></Text>
-                    </View>
-                </View>
-                <View style={styles.recentItem}>
-                    <View style={styles.recentItemIndicator}></View>
-                    <View style={{width:250}}>
-                        <Text style={[styles.text, {color:"#41444b", fontWeight:"300"}]}>
-                            Started Following 
-                        <Text style={{fontWeight:'400'}}>Theoderic Onipe and 
-                        <Text style={{fontWeight:'400'}}>DesignIntoCode</Text></Text></Text>
-                    </View>
-                </View>
-
+                
+                )})}
+                
             </View>
             </ScrollView>
         </SafeAreaView>

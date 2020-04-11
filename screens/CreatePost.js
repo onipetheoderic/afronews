@@ -1,5 +1,5 @@
 import React from 'react';
-import {View,Button, ScrollView,Picker, ToastAndroid, Image,Text, TouchableOpacity, Dimensions, StyleSheet, StatusBar, ImageBackground, Animated} from 'react-native';
+import {View,Button, ActivityIndicator, ScrollView,Picker, ToastAndroid, Image,Text, TouchableOpacity, Dimensions, StyleSheet, StatusBar, ImageBackground, Animated} from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import { TypingAnimation } from 'react-native-typing-animation';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -18,8 +18,8 @@ import { getSinglePost,
 import ImagePicker from 'react-native-image-picker';
 import RNFetchBlob from 'rn-fetch-blob'
 import { baseUrl, iconUrl, countryKey, sessionKey } from '../Helpers/Constant'
-
-export default class App extends React.Component{
+import { withNavigation } from 'react-navigation';
+class NewPost extends React.Component{
     constructor(props){
         super(props);
         this.state={
@@ -100,7 +100,8 @@ export default class App extends React.Component{
             if (data.length>=1) {
                 console.log("its a success")
               this.setState({
-                allCategory:data
+                allCategory:data,
+                isLoading:false
               })
             }
           }).catch((e) => {
@@ -209,6 +210,7 @@ showToastWithGravity = (msg) => {
 
 nextPressed() {
     const {title, content, selectedCategory} = this.state;
+    this.setState({isLoading:true})
     if (title.length < 10 || content.length < 10) {
         // alert('Both username/password are required')
         this.showToastWithGravity("The Title and content must be more than 10 characters")
@@ -216,34 +218,33 @@ nextPressed() {
     else {
         console.log("session token",this.state.session.token)
         let image = this.state.file
-        var newFile = new FormData();
-        newFile.append('title', title);
-        newFile.append('content',content);
-        newFile.append('category',selectedCategory);
+        
         console.log("this is the file first",this.state.file[0].uri)
        
-        
-        RNFetchBlob.fetch('POST', `${this.state.baseUrl}api/writePost`, {
-          
-            Authorization : `Bearer ${this.state.session.token}`,
-            'Content-Type' : 'application/json',
-            'Accept': 'application/json'
-
-        }, [
-                   // part file from storage
-            { name : 'image[]', filename : this.state.file[0].name, type:'image/jpeg', data: RNFetchBlob.wrap(this.state.file[0].uri)},
-            // elements without property `filename` will be sent as plain text
-            {name: "title", data: "this isthe titlee"},
-            {name: "content", data: "this is thte content"},
-            {name: "category", data: "7"}
+        let payload = [
+            {name: "title", data: title},
+            {name: "content", data: content},
+            {name: "category", data: selectedCategory.toString()}
+        ];
+        for(var i in image){
+            let eachcontent = {name : 'image[]', filename : image[i].name, type:image[i].type, data: RNFetchBlob.wrap(image[i].uri)}        
+            payload.push(eachcontent)
+        }
+        console.log(payload)
+        createPost(this.state.baseUrl, this.state.session.token, payload)
+        .then((data) => {
+            console.log("succeeesosos", data)
+            if (data.hasOwnProperty('success')) {
+                this.setState({isLoading:false})
+                console.log("its a success")
+                this.showToastWithGravity("Post successfully created")
+                this.props.navigation.navigate('ProfileScreen')
+            }
+          }).catch((e) => {
+            this.showToastWithGravity(e)
+            console.warn(e)
             
-        
-        ]).then((resp) => {
-            console.log("this is the response", JSON.stringify(resp))
-        }).catch((err) => {
-            console.log("this is the error", JSON.stringify(err))
-        })
-       
+          })
    
     }
    
@@ -257,6 +258,17 @@ const response = await fetch(url, {
       method: 'POST',
       body: data
     })
+
+    [
+                   // part file from storage
+            { name : 'image[]', filename : this.state.file[0].name, type:'image/jpeg', data: RNFetchBlob.wrap(this.state.file[0].uri)},
+            // elements without property `filename` will be sent as plain text
+            {name: "title", data: "this isthe titlee"},
+            {name: "content", data: "this is thte content"},
+            {name: "category", data: "7"}
+            
+        
+        ]
 */ 
     render(){
         const width = this.state.animation_login;
@@ -265,6 +277,13 @@ const response = await fetch(url, {
         console.log("SSSSSSSSSSS",userLoggedIn, session)
         // console.log("all render cats",this.state.allCategory)
         const allCategory = this.state.allCategory
+        if (this.state.isLoading) {
+            return (
+              <View style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                <ActivityIndicator size="large" color="#07411D" />
+              </View>
+            )
+          }    
         return(
             <View style={styles.container}>
                 <StatusBar barStyle="light-content" />
@@ -344,9 +363,8 @@ const response = await fetch(url, {
                      <View style={styles.signUp}></View>
                     {!userLoggedIn &&
                     <View style={styles.signUp}>
-                          <TouchableOpacity onPress={()=>this.props.navigation.navigate("SignUpScreen")}>
-                        <Text style={{fontFamily:'Audiowide-Regular', color:'#07411D'}}>Quickly SignUp to Post </Text>
-                      
+                        <TouchableOpacity onPress={()=>this.props.navigation.navigate('Home')}>
+                            <Text style={{fontFamily:'Audiowide-Regular', color:'#07411D'}}>Quickly SignUp to Post </Text>
                         </TouchableOpacity>
                     </View>
                     }
@@ -356,7 +374,7 @@ const response = await fetch(url, {
         
     }
 }
-
+export default withNavigation(NewPost)
 const width = Dimensions.get("screen").width;
 
 const styles = StyleSheet.create({

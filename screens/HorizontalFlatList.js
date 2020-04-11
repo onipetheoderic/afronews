@@ -16,16 +16,16 @@ HorizontalFlatListItem = (props) => {
         flex:1,
         flexDirection: 'column',
         alignItems: 'center',
-        width: 100,
-        borderRadius: 50,
+        width: 80,
+        borderRadius: 80,
         borderWidth: 1,
         borderColor:'grey',
-        margin: 10,
+        margin: 4,
     }}>
-        <View style={{marginTop:20, marginBottom:5}}>
-         <FontAwesome5 name={iconName} size={34} color="#07411D" />
+        <View style={{marginTop:15, marginBottom:5}}>
+         <FontAwesome5 name={iconName} size={30} color="#07411D" />
          </View>
-        <Text style={{fontSize:11, color:'#07411D', margin:5, fontWeight:'bold', textAlign:'center'}}>
+        <Text style={{fontSize:8, color:'#07411D', margin:5, fontWeight:'bold', textAlign:'center'}}>
         {props.item.name}
         </Text>
 
@@ -40,7 +40,7 @@ export default HorizontalFlatListScreen = (props) => (
                 flexDirection:'column', 
                 marginTop:Platform.OS === 'ios'? 34:0
             }}>
-                <View style={{height:120, marginTop:20}}>
+                <View style={{height:90, marginTop:10}}>
                     <FlatList 
                     
                     horizontal={true}//means it can be scrolled horizontally
