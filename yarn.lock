@@ -7612,6 +7612,11 @@ react-native-keyboard-aware-scroll-view@^0.6.0:
     prop-types "^15.6.0"
     react-native-iphone-x-helper "^1.0.1"
 
+react-native-paystack@^3.4.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/react-native-paystack/-/react-native-paystack-3.4.0.tgz#9e2d326dfb465ff99f756708dbf60af8f9bf7ee3"
+  integrity sha512-m/eP/xNHL4drQkWnnoddKBt7EX8dLknAkVRbtIHp2iYVKBCYCrjzoSM/Dl0PDhAZD4HWxM3W2UkbIRGZvVWY9A==
+
 react-native-ratings@^6.3.0:
   version "6.5.0"
   resolved "https://registry.yarnpkg.com/react-native-ratings/-/react-native-ratings-6.5.0.tgz#a1606ccba3c5b54eec8e6cfa4765a45cf0e4ab8d"

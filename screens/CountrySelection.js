@@ -86,7 +86,7 @@ SetCountry = (countryCode, countryName, baseUrl, currency) => {
 
 //https://ng.afronews.org/images/afronews-logo.png
     render(){
-        console.log("this are the prrops",this.props)
+        //console.log("this are the prrops",this.props)
         const width = this.state.animation_login;
         return(
             <View style={styles.container}>

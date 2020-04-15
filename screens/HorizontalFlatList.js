@@ -1,18 +1,25 @@
 import React,{Component} from 'react';
-import {FlatList, View, Text, StatusBar, Platform} from 'react-native';
+import {FlatList, View, Text, TouchableOpacity, StatusBar, Platform} from 'react-native';
 import Screen from './Screen';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {AllFeedsData} from './AllFeedsData';
 
 
 HorizontalFlatListItem = (props) => {
-
-    console.log("hhhhh",props.item.icon_name)
+    console.log("navigation", props.navigation)
+    console.log("hhhhh",props.item)
+    
     let iconName = props.item.icon_name === undefined? "user" :props.item.icon_name
     return(
 
     
-    <View style={{
+    <TouchableOpacity 
+        onPress={() => props.navigation.navigate('CategoryScreen', {
+            id: props.item.id,
+            title: props.item.name,
+        })}
+      
+        style={{
         flex:1,
         flexDirection: 'column',
         alignItems: 'center',
@@ -29,7 +36,7 @@ HorizontalFlatListItem = (props) => {
         {props.item.name}
         </Text>
 
-    </View>
+    </TouchableOpacity>
 )
 }
 
@@ -47,7 +54,7 @@ export default HorizontalFlatListScreen = (props) => (
                     data={props.allCategories}
                     renderItem = {({ item, index }) => {
                         return (
-                            <HorizontalFlatListItem item={item} index={index} parentFlatList={props.allCategories}>
+                            <HorizontalFlatListItem item={item} index={index} parentFlatList={props.allCategories} navigation={props.navigation}>
 
                             </HorizontalFlatListItem>
                         )

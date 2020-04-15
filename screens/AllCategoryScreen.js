@@ -1,5 +1,5 @@
 import React,{Component} from 'react';
-import { ActivityIndicator, TouchableOpacity, RefreshControl, FlatList, Image, View, StyleSheet, Text, StatusBar, Platform} from 'react-native';
+import {SafeAreaView, ScrollView, ActivityIndicator, TouchableOpacity, RefreshControl, FlatList, Image, View, StyleSheet, Text, StatusBar, Platform} from 'react-native';
 import Screen from './Screen';
 import HorizontalFlatList from './HorizontalFlatList';
 import {AllFeedsData} from './AllFeedsData';
@@ -30,11 +30,11 @@ export default class AllFeedsScreen extends Component {
         store().then((val) => {
           if (val) {
             let _data = JSON.parse(val)
-             ////console.log("val", val)
+             console.log("val", val)
             getFeeds(_data.baseUrl, 1).then((data) => {
-              ////console.log("this are all the datas",data)
+              console.log("this are all the datas",data)
               let news = data.data
-              ////console.log(news)
+              console.log(news)
               this.fetchCategory(_data.baseUrl)
               this.setState({
                 baseUrl: _data.baseUrl,
@@ -54,11 +54,11 @@ export default class AllFeedsScreen extends Component {
     }
     
     fetchCategory(baseUrl){
-      ////console.log("geeting cateories")
+      console.log("geeting cateories")
       getCategories(baseUrl).then((data) => {
-          ////console.log("categorys", data)
+          console.log("categorys", data)
           if (data.length>=1) {
-              ////console.log("its a success")
+              console.log("its a success")
             this.setState({
               allCategory:data
             })
@@ -85,7 +85,7 @@ export default class AllFeedsScreen extends Component {
                 // currentPage: data.current_page,
                 isRefreshing: false
               })
-              ////console.log(this.state.currentPage)
+              console.log(this.state.currentPage)
             }).catch((e) => {
               this.setState({
                 isRefreshing: false
@@ -105,7 +105,7 @@ export default class AllFeedsScreen extends Component {
     render() {
     
       let navigation = this.props.navigation
-      ////console.log("this si Navi", navigation)
+      console.log("this si Navi", navigation)
         if (this.state.isLoading) {
             return (
               <View style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -115,58 +115,35 @@ export default class AllFeedsScreen extends Component {
           }
         
         return (
-            <View>
-
-              <Text style={{fontSize:20, textAlign:'center', margin:20}}>All Posts</Text>
-                {/* <HorizontalFlatList allCategories={this.state.allCategory} navigation={navigation} /> */}
-                <FlatList
-          data={this.state.newsList}
-          keyExtractor={(item, index) => 'key' + index}
-          renderItem={({item, index}) => {
-              return (
-                <FlatListItem item={item} index={index} 
-                navigation={this.props.navigation}/>
-            )}}
-            refreshControl={
-                <RefreshControl
-                  refreshing={this.state.isRefreshing}
-                  onRefresh={() => {
-                    this.setState({ isRefreshing: true })
-                    this.fetchFeeds()
-                    this.setState({ isRefreshing: false })
-                  }}
-                />
-              }
-              onEndReached={() => { this.handleInfiniteScroll() }}
-            onEndReachedThreshold={0.01}
-            scrollEnabled={!this.state.isLoading}
-        />
-            </View>
-        )
-    }
-}
-class FlatListItem extends Component {
-    //http://penplusbytes.org/wp-content/uploads/2017/12/news.jpg
-    render(){
-        const { topic, images, id, comments_count } = this.props.item
-        let imgPath = (images.length < 1) ? iconUrl : `${baseUrl}${images[0].path}`
-        return (
-            <TouchableOpacity onPress={() => this.props.navigation.navigate('SingleScreen', {
-                id: id,
-                title: topic,
-              })}>
-            <View style={{flex:1, flexDirection: 'row',
-            backgroundColor:this.props.index % 2 == 0 ? '#EBEDEC': 'white'}}>
-                <Image source={{uri: imgPath}}
-                style={{width:120, height:100, margin:5, resizeMode:'stretch'}}
-                >
-                </Image>
-                <View style={{flexDirection:'column', width:'65%'}}>
-                <Text style={[styles.flatListItem, styles.topItem]}>{topic}</Text>
-                <Text style={styles.flatListItem}>{this.props.item.icon}</Text>
+            <SafeAreaView style={styles.container}>
+            <ScrollView style={styles.scrollView}>
+            {this.state.allCategory.map((category, index) => {
+                let imgPath = `${this.state.baseUrl}${category.avatar}`
+                return(
+                    <View style={{flex:1, flexDirection: 'row', backgroundColor:'white', marginTop:20}}>
+                    <TouchableOpacity onPress={() => this.props.navigation.navigate('CategoryScreen', {
+                id: category.id,
+                title: category.name,
+              })} style={{height:100, width: '100%', flexDirection: 'row'}}>
+                    <View style={{flexDirection:'column', flex:1, marginTop:20, marginLeft:10}}>
+                    <Text style={{fontFamily:'Candara', fontSize:25}}>{category.name}</Text>
+                    <Text style={[styles.flatListItem, {fontFamily:'Candara'}]}>Select Nigeria News</Text>
+                    </View>
+                    <Image source={{uri: imgPath}}
+                    style={{width:100, height:90, marginRight:10, resizeMode:'stretch'}}
+                    >
+                    </Image>
+                    </TouchableOpacity>
+                
+                    
                 </View>
-            </View>
-            </TouchableOpacity>
+                )
+            })}
+                   
+                
+                
+              </ScrollView>
+            </SafeAreaView>
         )
     }
 }

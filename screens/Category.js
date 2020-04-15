@@ -3,18 +3,20 @@ import { ActivityIndicator, TouchableOpacity, RefreshControl, FlatList, Image, V
 import Screen from './Screen';
 import HorizontalFlatList from './HorizontalFlatList';
 import {AllFeedsData} from './AllFeedsData';
-import { getFeeds, getCategories } from '../Helpers/ApiService'
+import { getFeeds, getCategories, getPostsByCategory } from '../Helpers/ApiService'
 import axios from 'axios';
 import AsyncStorage from '@react-native-community/async-storage'
-import { baseUrl, iconUrl, countryKey } from '../Helpers/Constant'
+import { baseUrl, iconUrl, countryKey } from '../Helpers/Constant';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 // import {baseUrl} from '../Helpers/axiosService';
+//https://ng.afronews.org/api/category/1
 
-
-export default class AllFeedsScreen extends Component {
+export default class CategoryScreen extends Component {
     constructor(props) {
         super(props);
         this.state = {
             isLoading: true,
+            title: "",
             baseUrl: baseUrl,
             isRefreshing: false,
             session: null,      
@@ -24,25 +26,44 @@ export default class AllFeedsScreen extends Component {
             allCategory:[]
         };
       }
-     
+      fetchPosts = () => {
+        const { navigation } = this.props
+        let id = navigation.getParam('id', null)
+        let title = navigation.getParam('title', null)
+        
+        this.fetchCategory(this.state.baseUrl)
+        getPostsByCategory(this.state.baseUrl, id, 1).then((data) => {
+            console.log("this are the categories postssss",data)
+            this.setState({
+                id: id,
+                title: title,
+                baseUrl: baseUrl,
+
+                newsList: data.data,
+                currentPage: data.current_page,
+                lastPage: data.last_page,
+                isLoading: false
+            })
+        }).catch((e) => {
+            console.warn(e.message)
+        })
+    }
     fetchFeeds() {
         let store = async () => await AsyncStorage.getItem(countryKey)
         store().then((val) => {
           if (val) {
             let _data = JSON.parse(val)
-             ////console.log("val", val)
-            getFeeds(_data.baseUrl, 1).then((data) => {
-              ////console.log("this are all the datas",data)
+             console.log("val", val)
+           
+              console.log("this are all the datas",data)
               let news = data.data
-              ////console.log(news)
-              this.fetchCategory(_data.baseUrl)
+              console.log(news)
+              
               this.setState({
                 baseUrl: _data.baseUrl,
                 newsList: news,
-                currentPage: data.current_page,
-                lastPage: data.last_page,
-                isLoading: false
-              })
+               
+              
             }).catch((e) => {
               console.warn(e.message)
             })
@@ -54,11 +75,11 @@ export default class AllFeedsScreen extends Component {
     }
     
     fetchCategory(baseUrl){
-      ////console.log("geeting cateories")
+      console.log("geeting cateories")
       getCategories(baseUrl).then((data) => {
-          ////console.log("categorys", data)
+          console.log("categorys", data)
           if (data.length>=1) {
-              ////console.log("its a success")
+              console.log("its a success")
             this.setState({
               allCategory:data
             })
@@ -68,10 +89,11 @@ export default class AllFeedsScreen extends Component {
         })
   }
 
-      componentDidMount() {
+      componentDidMount() {      
         this.fetchFeeds()
+        this.fetchPosts()       
       }
-    
+     
     handleInfiniteScroll = () => {
         if (this.state.currentPage < this.state.lastPage) {
           this.setState({
@@ -85,7 +107,7 @@ export default class AllFeedsScreen extends Component {
                 // currentPage: data.current_page,
                 isRefreshing: false
               })
-              ////console.log(this.state.currentPage)
+              console.log(this.state.currentPage)
             }).catch((e) => {
               this.setState({
                 isRefreshing: false
@@ -103,9 +125,8 @@ export default class AllFeedsScreen extends Component {
       }
 
     render() {
-    
-      let navigation = this.props.navigation
-      ////console.log("this si Navi", navigation)
+        const { goBack } = this.props.navigation;
+        let navigation = this.props.navigation
         if (this.state.isLoading) {
             return (
               <View style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -116,9 +137,18 @@ export default class AllFeedsScreen extends Component {
         
         return (
             <View>
-
-              <Text style={{fontSize:20, textAlign:'center', margin:20}}>All Posts</Text>
-                {/* <HorizontalFlatList allCategories={this.state.allCategory} navigation={navigation} /> */}
+        <View style={styles.titleBar}>
+                    <TouchableOpacity onPress={() => goBack()}>
+                        <FontAwesome5 name="angle-left" size={24} color="#52575d" />
+                    </TouchableOpacity>
+                    <TouchableOpacity>
+                        <Text style={{fontSize:17, fontFamily:'Montserrat'}}>{this.state.title}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity>
+                        
+                    </TouchableOpacity>
+        </View>
+             
                 <FlatList
           data={this.state.newsList}
           keyExtractor={(item, index) => 'key' + index}
@@ -181,13 +211,12 @@ const styles = StyleSheet.create({
     topItem: {
         marginTop:10,
         fontFamily:'Montserrat-Regular'
-    }
+    },
+    titleBar: {
+        flexDirection: 'row',
+        justifyContent: "space-between",
+        marginTop: 24,
+        marginBottom:24,
+        marginHorizontal: 16
+    },
 })
-
-
-  
-// export const AllFeedsScreen = () => ( 
-//     <View>
-//         <Text style={{fontSize:20, color:"black"}}>I am What I am</Text>
-//     </View>
-// );

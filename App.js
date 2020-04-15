@@ -13,6 +13,8 @@ import LoginScreen from './screens/LoginScreen';
 import CreatePost from './screens/CreatePost';
 import SignUpScreen from './screens/SignUpScreen';
 import AddButton from './components/AddButton';
+import CategoryScreen from './screens/Category';
+import AllCategoryScreen from './screens/AllCategoryScreen';
 import SingleScreen from './screens/SingleScreen';
 import UserScreen from './screens/UserScreen';
 const TabNavigator = createBottomTabNavigator(
@@ -38,8 +40,8 @@ const TabNavigator = createBottomTabNavigator(
         tabBarIcon: <AddButton />
       }
     },
-    Treatment: {
-      screen: TreatmentScreen,
+    AllCategoryScreen: {
+      screen: AllCategoryScreen,
       navigationOptions: {
         tabBarIcon: () => <FontAwesome5 name={'band-aid'} size={24} color="#07411D" />,
        
@@ -67,7 +69,8 @@ const AppNavigator = createStackNavigator(
     SignUpScreen: SignUpScreen,
     LoginScreen: LoginScreen,
     SignUpScreen: SignUpScreen,
-    SingleScreen: SingleScreen
+    SingleScreen: SingleScreen,
+    CategoryScreen:CategoryScreen
   },{
     headerMode: 'none'
   }

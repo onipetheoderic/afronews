@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-community/async-storage'
 const webViewHeight = Dimensions.get('window').height;
 import { getSinglePost, 
     getPostComments, 
+    doLikeComment,
     getSinglePostAuthed,
     doLikePost, 
     doPostComment,    
@@ -22,12 +23,15 @@ export default class AllFeedsScreen extends Component {
     constructor(props) {
         super(props);
         this.state = {
+          uniqueValue:1,
           id: null,
           title: null,
           myComment: null,
           post: null,
           user: null,
           createdAt: null,
+          currentlyUpdatedComment:0,
+          allCommentLiked: [],
           likes: null,
           slug: null,
           isLiked: false,
@@ -37,7 +41,8 @@ export default class AllFeedsScreen extends Component {
           commentsCount: null,
           session: null,
           baseUrl: baseUrl,
-          isLoading: true
+          isLoading: true,
+          message:"",
         };
     }
 
@@ -82,6 +87,7 @@ export default class AllFeedsScreen extends Component {
         const { navigation } = this.props
         let id = navigation.getParam('id', null)
         let title = navigation.getParam('title', null)
+       
         this.fetchPostComments(id, baseUrl, session)
         getSinglePost(baseUrl, id).then((data) => {
           let post = entities.decodeHTML(data.text)
@@ -103,7 +109,7 @@ export default class AllFeedsScreen extends Component {
             isLoading: false
           })
     
-    
+         
           // this.fetchPostComments()
     
         }).catch((e) => {
@@ -140,8 +146,8 @@ export default class AllFeedsScreen extends Component {
             isLoading: false,
             commentsLiked: data.commentsLiked
           })
-    
-          // this.fetchPostComments()
+          this.fetchPostComments(id, baseUrl, session)
+         
     
         }).catch((e) => {
           console.warn(e.message)
@@ -238,68 +244,43 @@ export default class AllFeedsScreen extends Component {
           ToastAndroid.CENTER
         );
       };
+
+      forceRemount = () => {
+        this.setState(({ uniqueValue }) => ({
+          uniqueValue: uniqueValue + 1
+        }))
+      }
       commentOnPost = () => {
-        console.log("this is the user comment",this.state.myComment)
-      
-        const { id, baseUrl, myComment, session } = this.state
-
-        this.setState({
-            isBtnDisabled: true,
-            isPosting: true
-        })
-
-        if (myComment.trim().length < 1) {
-            this.setState({
-                isPosting: false
-            })
-            return
-        }
-
+        
+        let {baseUrl, id, session, message, commentsData, } = this.state;
+        // this.setState({isLoading:true})
+        console.log("YYYYY",session.token, message, id, baseUrl)
         let formData = new FormData();
         formData.append('postId', id);
-        formData.append('comment', myComment);
+        formData.append('comment', message)
+        let comment = {
+          comment: message,
+          id: id,
+          user:{profile:{avatar:session.avatar}}
 
+        }
+     
+        this.setState({
+          commentsData: this.state.commentsData.concat(comment),
+          message:""
+        })
         doPostComment(baseUrl, formData, session.token).then((data) => {
-            if (data) {
-                // console.warn(data)
-                if (data.success) {
-                  this.showToastWithGravity('Comment posted successfully')
-                
-                    this.setState({
-                        isPosting: false,
-                        myComment: ''
-                    }, () => {
-                        this.fetchPostComments(id, baseUrl, session)
-                    })
-                } else if (data.errors) {
-                    if (data.errors.comment) {
-                      this.showToastWithGravity(data.errors.comment)
-                    } else {
-                      this.showToastWithGravity('Your comment cannot be posted at the moment')
-                       
-                    }
-                    this.setState({
-                        isBtnDisabled: false,
-                        isPosting: false
-                    })
-                }
-                else {
-                  this.showToastWithGravity('Your comment cannot be posted at the moment')
-                      
-                    this.setState({
-                        isBtnDisabled: false,
-                        isPosting: false
-                    })
-                }
-            } else {
-              this.showToastWithGravity('Your comment cannot be posted at the moment')
-            }
-        }).catch((e) => {
-            console.warn(e.message)
-            this.setState({
-                isBtnDisabled: false,
-                isPosting: false
-            })
+          console.log("Post comment data",data)
+          // this.setState({isLoading:false})
+          if(data.hasOwnProperty("success")){
+            this.showToastWithGravity("comment successfully made")
+           console.log(session)
+         
+            
+          }
+          else{
+            this.showToastWithGravity("error occured")
+          }
         })
       }
       
@@ -309,8 +290,7 @@ export default class AllFeedsScreen extends Component {
             isBtnClicked: true
         })
         getPostComments(baseUrl, postId, 1).then((data) => {
-          console.log("XXXXXXXXXXXXXXXXXXX",data)
-          console.log("JJJJJJJJJJJJ", data.data)
+          ////console.log("JJJJJJJJJJJJ", data.data)
             this.setState({
                 commentsData: data.data,
                 commentsCount: data.total,
@@ -326,11 +306,47 @@ export default class AllFeedsScreen extends Component {
             console.warn(e.message)
         })
     }
+commentReturner = (comment_id, comment_count) => {
+  if(this.state.allCommentLiked.includes(comment_id)){
+    return parseInt(comment_count+1)
+  }
+  if(comment_count==0){
+    return;
+  }
+  else {
+    return comment_count
+  }
+}
 
+commentLike = (comment_id) => {
+  let {baseUrl, session} = this.state;
+  console.log("this is the commentlike id",comment_id)
+  this.setState({
+    currentlyUpdatedComment:comment_id,
+    allCommentLiked: this.state.allCommentLiked.concat(comment_id),
+  })
+  
+  //allCommentLiked
+  let formData = new FormData();
+      formData.append('commentId', comment_id)
+  
+  doLikeComment(baseUrl, formData, session.token).then((data) => {
+    console.log("this si the return comment link data", data)
+    if(data.hasOwnProperty("success")){
+      this.showToastWithGravity("comment successfully liked")
+     console.log(session)      
+    }
+    else{
+      this.showToastWithGravity(data.failed)
+      this.showToastWithGravity(data.error)
+    }
+  })
+}
 
     render(){
 const { goBack } = this.props.navigation;
-const {commentsData, commentsCount, isLoading, isCommentLiked, createdAt, user, title, likes, id, post, baseUrl, isLiked, commentsLiked, session} = this.state
+const {commentsData, commentsCount, isLoading, isCommentLiked, createdAt, user, title, likes, id, post, baseUrl, isLiked, commentsLiked, session} = this.state;
+console.log("commentDatass", commentsData)
 if (isLoading) {
   return (
     <View style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -383,7 +399,9 @@ return (
               <TextInput 
                 placeholder="Enter your Comment here" 
                 style={{borderWidth:1, width:'60%'}}
-                onChangeText={(text) => this.setState({ myComment: text })}
+                // onChangeText={(text) => this.setState({ myComment: text })}
+                onChangeText={message => {this.setState({ message });}}
+                value={this.state.message}
               />
               <TouchableOpacity style={{backgroundColor:"green", width:'20%'}} onPress={()=>this.commentOnPost()}>
               <FontAwesome5 style={{margin:20}} name="angle-double-right" size={27} color="white"/>
@@ -408,19 +426,17 @@ return (
                       </Image>
                       <View style={{flexDirection:'column', width:'70%',marginLeft:20, marginTop:10}}>
                       <Text style={[styles.flatListItem]}>{comment.comment}</Text>
-                      <TouchableOpacity onPress={() => this.handleLike(comment.id,)} >
+                      <View style={{flexDirection:'row'}}>
+                      <TouchableOpacity onPress={() => this.commentLike(comment.id)} >
                       {likeComment}
                     </TouchableOpacity>
+                    <Text style={{fontSize:11}}>{this.commentReturner(comment.id,comment.likes)}</Text>
+                      </View>
                       </View>
                   </View>
                  )})}
               </View>
               }
-              
-             
-                
-               
-               
 
             </View>
             </ScrollView>

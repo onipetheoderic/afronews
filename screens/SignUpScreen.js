@@ -1,10 +1,12 @@
 import React from 'react';
-import {View,ScrollView, Image,Text, TouchableOpacity, Dimensions, StyleSheet, StatusBar, ImageBackground, Animated} from 'react-native';
+import {Alert, View,ScrollView,ToastAndroid, Image,Text, TouchableOpacity, Dimensions, StyleSheet, StatusBar, ImageBackground, Animated} from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import { TypingAnimation } from 'react-native-typing-animation';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import * as Animatable from 'react-native-animatable';
-
+import AsyncStorage from '@react-native-community/async-storage';
+import { baseUrl, iconUrl, countryKey, sessionKey } from '../Helpers/Constant'
+import { doRegister } from '../Helpers/ApiService'
 export default class App extends React.Component{
     constructor(props){
         super(props);
@@ -13,6 +15,15 @@ export default class App extends React.Component{
             typing_password: false,
             animation_login: new Animated.Value(width-40),
             enable: true,
+            username:"",
+            first_name:"",
+            last_name:"",
+            phone_number:"",
+            email:"",
+            ref:"",
+            password:"",
+            password_confirmation:"",
+            baseUrl:null
         }
     }
 
@@ -40,22 +51,77 @@ export default class App extends React.Component{
             />
         )
     }
+    componentDidMount() {
+        let store = async () => await AsyncStorage.getItem(countryKey)
+        store().then((val) => {    
+          let data = JSON.parse(val)    
+          this.setState({
+            baseUrl: data.baseUrl
+          })
+        })
+    }
+    showToastWithGravity = (msg) => {
+        ToastAndroid.showWithGravity(
+          msg,
+          ToastAndroid.SHORT,
+          ToastAndroid.CENTER
+        );
+      };
+
+    createTwoButtonAlert = () =>
+      Alert.alert(
+        "Registration Complete",
+        "You can proceed to Payment or Login Page",
+        [
+          {
+            text: "Cancel",
+            onPress: () => this.props.navigation.navigate("LoginScreen"),
+            style: "cancel"
+          },
+          { text: "OK", onPress: () => this.props.navigation.navigate("PaymentScreen"),
+        } 
+        ],
+        { cancelable: false }
+      );
 
     _animation(){
-        Animated.timing(
-            this.state.animation_login,
-            {
-                toValue: 40,
-                duration: 250,
-            }
-        ).start();
-        setTimeout(()=> {
-            this.setState({
-                enable:false,
-                typing_email:false,
-                typing_password:false
-            })
-        }, 150)
+        
+        console.log("this is the base url",this.state.baseUrl)
+        const {username, email, password, first_name, last_name, 
+            phone_number, password_confirmation, ref} = this.state;
+
+
+            console.log("this KKKKK", username, email, password, first_name, last_name, 
+            phone_number, password_confirmation, ref)
+            let formData = new FormData(); 
+           formData.append('username', username);
+           formData.append('email', email);
+           formData.append('password', password);
+           formData.append('first_name', first_name);
+           formData.append('last_name', last_name);
+           formData.append('phone', phone_number);
+           formData.append('password_confirmation', password_confirmation);
+           formData.append('ref', ref);
+           
+           doRegister(this.state.baseUrl,formData).then((data)=>{
+               console.log("this is hte registration data", data)
+               if(data.hasOwnProperty('activated')){
+                this.showToastWithGravity('registration successful')
+                this.createTwoButtonAlert()
+               }
+               else{
+                for (const key in data.errors) {
+                    if (data.errors.hasOwnProperty(key)) {
+                      const element = data.errors[key];
+                     
+                        console.log(key+": ", element[0]);
+                        this.showToastWithGravity(element[0])
+                    }
+                  }
+                  
+               }
+        })
+       
     }
    
 
@@ -76,40 +142,101 @@ export default class App extends React.Component{
                 </ImageBackground>
                 </View>
                 <ScrollView style={styles.footer}>
+               
+                    <Text style={[styles.title, {marginTop:20, fontFamily:'Audiowide-Regular',}]}>First Name</Text>
+                    <View style={styles.action}>
+                        <TextInput 
+                        placeholder="First Name" 
+                        style={styles.textInput}
+                        onChangeText={first_name => {this.setState({ first_name });}}
+                        value={this.state.first_name}
+                        
+                        />
+                        
+                    </View>
+                    <Text style={[styles.title, {marginTop:20, fontFamily:'Audiowide-Regular',}]}>Last Name</Text>
+                    <View style={styles.action}>
+                        <TextInput 
+                        placeholder="Last Name" 
+                        style={styles.textInput}
+                        onChangeText={last_name => {this.setState({last_name });}}
+                        value={this.state.last_name}
+                        
+                        />
+                       
+                    </View>
+                    
+                    <Text style={[styles.title, {marginTop:20, fontFamily:'Audiowide-Regular',}]}>Phone Number</Text>
+                    <View style={styles.action}>
+                        <TextInput 
+                        placeholder="Phone Number" 
+                        keyboardType = 'numeric'
+                        style={styles.textInput}
+                        onChangeText={phone_number => {this.setState({phone_number});}}
+                        value={this.state.phone_number}
+                        
+                        />
+                       
+                    </View>
                     <Text style={[styles.title, {marginTop:20, fontFamily:'Audiowide-Regular',}]}>Email</Text>
                     <View style={styles.action}>
                         <TextInput 
                         placeholder="Your Email" 
                         style={styles.textInput}
-                        onFocus = {()=>this._foucus("email")}
+                        onChangeText={email => {this.setState({ email });}}
+                        value={this.state.email}
+                      
                         />
-                        {this.state.typing_email ?
-                        this._typing() : null
-                    }
+                       
                     </View>
                     <Text style={[styles.title, {marginTop:20, fontFamily:'Audiowide-Regular',}]}>Username</Text>
                     <View style={styles.action}>
                         <TextInput 
                         placeholder="Your Username" 
                         style={styles.textInput}
-                        onFocus = {()=>this._foucus("email")}
-                        onChangeText={(text) => this.setState({ username: text })}
+                        onChangeText={username => {this.setState({ username });}}
+                        value={this.state.username}
+                   
+                       
                         />
-                        {this.state.typing_email ?
-                        this._typing() : null
-                    }
-                    </View>
+                                         </View>
                     <Text style={[styles.title, {marginTop:20, fontFamily:'Audiowide-Regular',}]}>Password</Text>
                     <View style={styles.action}>
                         <TextInput 
                         secureTextEntry
                         placeholder="Your Password" 
                         style={styles.textInput}
-                        onFocus = {()=>this._foucus("password")}
+                        onChangeText={password => {this.setState({ password });}}
+                        value={this.state.password}
+                       
                         />
-                        {this.state.typing_password ?
-                            this._typing() : null
-                        }
+                        
+                    </View>
+
+                    <Text style={[styles.title, {marginTop:20, fontFamily:'Audiowide-Regular',}]}>Confirm Password</Text>
+                    <View style={styles.action}>
+                        <TextInput 
+                        secureTextEntry
+                        placeholder="Confirm Password" 
+                        style={styles.textInput}
+                        onChangeText={password_confirmation => {this.setState({ password_confirmation });}}
+                        value={this.state.password_confirmation}
+                   
+                        />
+                      
+                    </View>
+                    
+                    <Text style={[styles.title, {marginTop:20, fontFamily:'Audiowide-Regular',}]}>Referral Username</Text>
+                    <View style={styles.action}>
+                        <TextInput 
+                        placeholder="Referral Number" 
+                        style={styles.textInput}
+                        keyboardType = 'numeric'
+                        onChangeText={ref => {this.setState({ref});}}
+                        value={this.state.ref}
+                      
+                        />
+                        
                     </View>
                     <TouchableOpacity onPress={()=>this._animation()}>
                         <View style={styles.button_container}>
